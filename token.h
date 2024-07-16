@@ -32,7 +32,7 @@ enum TokenType {
 
     // keywords
     FUNCTION,
-    LET,
+    SET,
     TRUE,
     FALSE,
     IF,

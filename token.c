@@ -4,8 +4,8 @@
 
 
 enum TokenType lookup_identifier(char* identifier){
-    if(!strcmp(identifier, "let")){
-        return LET;
+    if(!strcmp(identifier, "set")){
+        return SET;
     } else if (!strcmp(identifier, "fn")){
         return FUNCTION;
     } else if (!strcmp(identifier, "true")){

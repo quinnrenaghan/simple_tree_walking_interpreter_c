@@ -182,16 +182,3 @@ char peek_ahead(lexer *l){
         return l->input[l->read_position];
     }
 }
-
-int main(){
-    char* input = "let five = 5; \n let ten = 10; \n let add = fn(x, y) { \n x + y;};  \n let result = add(five, ten); !-/*5; 5 < 10 > 5; \n if (5 < 10) {  return true; \n } else { return false;}     10 == 10; 10 != 9;";
-    lexer *l = new(input);
-    token *t = next_token(l);
-
-
-    while(t->type != 17){
-        printf("type: %d value: %s\n", t->type, t->value);
-        t = next_token(l);
-    }
-    return 0;
-}
