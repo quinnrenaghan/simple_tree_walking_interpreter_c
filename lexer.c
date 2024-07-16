@@ -26,40 +26,93 @@ token* next_token(lexer *l){
     eat_whitespace(l);
     switch(l->ch){
         case '=':
-            my_token->type = ASSIGN;
-            my_token->value = "=";
+            if(peek_ahead(l) == '='){
+                read_char(l);
+                my_token->type = EQ;
+                my_token->value = malloc(sizeof(char)*2 + 1);
+                strcpy(my_token->value, "==");
+            } else {
+                my_token->type = ASSIGN;
+                my_token->value = malloc(sizeof(char) + 1);
+                strcpy(my_token->value, "=");
+            }
             break;
         case '+':
             my_token->type = PLUS;
-            my_token->value = "+";
+            my_token->value = malloc(sizeof(char) + 1);
+            strcpy(my_token->value, "+");
             break;
-        case '(':
-            my_token->type = LPAREN;
-            my_token->value = "(";
+        case '-':
+            my_token->type = MINUS;
+            my_token->value = malloc(sizeof(char) + 1);
+            strcpy(my_token->value, "-");
             break;
-        case ')':  
-            my_token->type = RPAREN;
-            my_token->value = ")";
+        case '!':
+            if(peek_ahead(l) == '='){
+                read_char(l);
+                my_token->type = NOT_EQ;
+                my_token->value = malloc(sizeof(char)*2 + 1);
+                strcpy(my_token->value, "!=");
+            } else {
+                my_token->type = BANG;
+                my_token->value = malloc(sizeof(char) + 1);
+                strcpy(my_token->value, "!");
+            }
             break;
-        case '{':
-            my_token->type = LBRACE;
-            my_token->value = "{";
+        case '/':
+            my_token->type = SLASH;
+            my_token->value = malloc(sizeof(char) + 1);
+            strcpy(my_token->value, "/");
             break;
-        case '}':
-            my_token->type = RBRACE;
-            my_token->value = "}";
+        case '*':
+            my_token->type = ASTERISK;
+            my_token->value = malloc(sizeof(char) + 1);
+            strcpy(my_token->value, "*");
+            break;
+        case '<':
+            my_token->type = LT;
+            my_token->value = malloc(sizeof(char) + 1);
+            strcpy(my_token->value, "<");
+            break;
+        case '>':
+            my_token->type = GT;
+            my_token->value = malloc(sizeof(char) + 1);
+            strcpy(my_token->value, ">");
             break;
         case ',':
             my_token->type = COMMA;
-            my_token->value = ",";
+            my_token->value = malloc(sizeof(char) + 1);
+            strcpy(my_token->value, ",");
             break;
         case ';':
             my_token->type = SEMICOLON;
-            my_token->value = ";";
+            my_token->value = malloc(sizeof(char) + 1);
+            strcpy(my_token->value, ";");
+            break;
+        case '(':
+            my_token->type = LPAREN;
+            my_token->value = malloc(sizeof(char) + 1);
+            strcpy(my_token->value, "(");
+            break;
+        case ')':  
+            my_token->type = RPAREN;
+            my_token->value = malloc(sizeof(char) + 1);
+            strcpy(my_token->value, ")");
+            break;
+        case '{':
+            my_token->type = LBRACE;
+            my_token->value = malloc(sizeof(char) + 1);
+            strcpy(my_token->value, "{");
+            break;
+        case '}':
+            my_token->type = RBRACE;
+            my_token->value = malloc(sizeof(char) + 1);
+            strcpy(my_token->value, "}");
             break;
         case '\0':
             my_token->type = EOF_TOKEN;
-            my_token->value = "";
+            my_token->value = malloc(sizeof(char) + 1);
+            strcpy(my_token->value, "");
             break;
         default:
             if(is_letter(l->ch)){
@@ -122,16 +175,23 @@ void eat_whitespace(lexer *l){
 
 }
 
+char peek_ahead(lexer *l){
+    if(l->read_position >= strlen(l->input)){
+        return '\0';
+    } else {
+        return l->input[l->read_position];
+    }
+}
+
 int main(){
-    char* input = "let five=5";
+    char* input = "let five = 5; \n let ten = 10; \n let add = fn(x, y) { \n x + y;};  \n let result = add(five, ten); !-/*5; 5 < 10 > 5; \n if (5 < 10) {  return true; \n } else { return false;}     10 == 10; 10 != 9;";
     lexer *l = new(input);
-    token *t1 = next_token(l);
-    token *t2 = next_token(l);
-    token *t3 = next_token(l);
-    token *t4 = next_token(l);
-    printf("type: %d value: %s\n", t1->type, t1->value);
-    printf("type: %d value: %s\n", t2->type, t2->value);
-    printf("type: %d value: %s\n", t3->type, t3->value);
-    printf("type: %d value: %s\n", t4->type, t4->value);
+    token *t = next_token(l);
+
+
+    while(t->type != 17){
+        printf("type: %d value: %s\n", t->type, t->value);
+        t = next_token(l);
+    }
     return 0;
 }
