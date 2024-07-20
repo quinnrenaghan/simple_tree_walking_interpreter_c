@@ -1,9 +1,12 @@
-#ifndef TOKEN_H 
+#ifndef TOKEN_H
 #define TOKEN_H
 
-enum TokenType lookup_identifier(char* identifier);
+#define MAX_STATEMENTS 500
+#define MAX_ERRORS 100
+#define MAX_STR_LEN 100
 
-enum TokenType {
+
+typedef enum {
     // operators
     ASSIGN,
     PLUS,
@@ -14,7 +17,7 @@ enum TokenType {
     LT,
     GT,
 
-    //boolean operators
+    // boolean operators
     EQ,
     NOT_EQ,
 
@@ -26,7 +29,7 @@ enum TokenType {
     LBRACE,
     RBRACE,
 
-     // other
+    // other
     ILLEGAL,
     EOF_TOKEN,
 
@@ -42,11 +45,13 @@ enum TokenType {
     // type
     IDENT,
     INT,
-};
+} token_type;
 
 typedef struct {
-    enum TokenType type;
+    token_type type;
     char* value;
 } token;
+
+token_type lookup_identifier(char* identifier);
 
 #endif
