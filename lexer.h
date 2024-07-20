@@ -10,14 +10,15 @@ typedef struct {
     char ch;
 } lexer;
 
-token* next_token(lexer *l);
-void read_char(lexer *l);
+
 lexer* new(char* input);
+void read_char(lexer *l);
+token* next_token(lexer *l);
 char* read_identifier(lexer *l);
-int is_letter(char c);
-void eat_whitespace(lexer *l);
-int is_digit(char c);
 char* read_int(lexer *l);
+int is_letter(char c);
+int is_digit(char c);
+void eat_whitespace(lexer *l);
 char peek_ahead(lexer *l);
 
 #endif
