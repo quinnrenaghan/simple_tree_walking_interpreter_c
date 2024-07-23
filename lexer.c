@@ -1,18 +1,23 @@
 #include "lexer.h"
-#include "token.h"
-#include <string.h>
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-lexer* new(char* input){
+#include "token.h"
+
+/* creates a new lexer, which will convert the given string.*/
+lexer *new(char *input) {
     lexer *l = malloc(sizeof(lexer));
     l->input = input;
     read_char(l);
     return l;
 }
 
-void read_char(lexer *l){
-    if(l->read_position >= strlen(l->input)){
+/* advances the lexer positions, and updates the current character, accounting
+ * for  the case that it reaches the end*/
+void read_char(lexer *l) {
+    if (l->read_position >= strlen(l->input)) {
         l->ch = '\0';
     } else {
         l->ch = l->input[l->read_position];
@@ -21,15 +26,18 @@ void read_char(lexer *l){
     l->read_position++;
 }
 
-token* next_token(lexer *l){
+/* returns the token associated with the character that the lexer currently sits
+ * on.*/
+token *next_token(lexer *l) {
     token *my_token = malloc(sizeof(token));
     eat_whitespace(l);
-    switch(l->ch){
+    switch (l->ch) {
+        // check for 2 character token.
         case '=':
-            if(peek_ahead(l) == '='){
+            if (peek_ahead(l) == '=') {
                 read_char(l);
                 my_token->type = EQ;
-                my_token->value = malloc(sizeof(char)*2 + 1);
+                my_token->value = malloc(sizeof(char) * 2 + 1);
                 strcpy(my_token->value, "==");
             } else {
                 my_token->type = ASSIGN;
@@ -47,11 +55,12 @@ token* next_token(lexer *l){
             my_token->value = malloc(sizeof(char) + 1);
             strcpy(my_token->value, "-");
             break;
+        // check for 2 character token.
         case '!':
-            if(peek_ahead(l) == '='){
+            if (peek_ahead(l) == '=') {
                 read_char(l);
                 my_token->type = NOT_EQ;
-                my_token->value = malloc(sizeof(char)*2 + 1);
+                my_token->value = malloc(sizeof(char) * 2 + 1);
                 strcpy(my_token->value, "!=");
             } else {
                 my_token->type = BANG;
@@ -94,7 +103,7 @@ token* next_token(lexer *l){
             my_token->value = malloc(sizeof(char) + 1);
             strcpy(my_token->value, "(");
             break;
-        case ')':  
+        case ')':
             my_token->type = RPAREN;
             my_token->value = malloc(sizeof(char) + 1);
             strcpy(my_token->value, ")");
@@ -115,14 +124,17 @@ token* next_token(lexer *l){
             strcpy(my_token->value, "");
             break;
         default:
-            if(is_letter(l->ch)){
+            // string found. check for keyword.
+            if (is_letter(l->ch)) {
                 my_token->value = read_identifier(l);
                 my_token->type = lookup_identifier(my_token->value);
                 return my_token;
-            } else if(is_digit(l->ch)){
+                // number found.
+            } else if (is_digit(l->ch)) {
                 my_token->type = INT;
                 my_token->value = read_int(l);
                 return my_token;
+                // anything else: ILLEGAL
             } else {
                 my_token->type = ILLEGAL;
                 my_token->value = &(l->ch);
@@ -132,10 +144,12 @@ token* next_token(lexer *l){
     return my_token;
 }
 
-char* read_identifier(lexer *l){
-    char* identifier;
+/* reads letters until non-letter character, stores it in string, and returns
+ * string.*/
+char *read_identifier(lexer *l) {
+    char *identifier;
     int start_pos = l->position;
-    while(is_letter(l->ch)){
+    while (is_letter(l->ch)) {
         read_char(l);
     }
 
@@ -146,10 +160,12 @@ char* read_identifier(lexer *l){
     return identifier;
 }
 
-char* read_int(lexer *l){
-    char* identifier;
+/* read_int. reads digits until non-digit character, stores it in string, and
+ * returns string.*/
+char *read_int(lexer *l) {
+    char *identifier;
     int start_pos = l->position;
-    while(is_digit(l->ch)){
+    while (is_digit(l->ch)) {
         read_char(l);
     }
 
@@ -160,23 +176,24 @@ char* read_int(lexer *l){
     return identifier;
 }
 
-int is_letter(char c){
+/* checks if character is a letter.*/
+int is_letter(char c) {
     return 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_';
 }
 
-int is_digit(char c){
-    return '0' <= c && c <= '9';
-}
+/* hecks if character is a digit.*/
+int is_digit(char c) { return '0' <= c && c <= '9'; }
 
-void eat_whitespace(lexer *l){
-    while(l->ch == ' ' || l->ch == '\t' || l->ch == '\n' || l->ch == '\r'){
+/* advances the lexer past any whitespace.*/
+void eat_whitespace(lexer *l) {
+    while (l->ch == ' ' || l->ch == '\t' || l->ch == '\n' || l->ch == '\r') {
         read_char(l);
     }
-
 }
 
-char peek_ahead(lexer *l){
-    if(l->read_position >= strlen(l->input)){
+/* returns the character 1 position ahead.*/
+char peek_ahead(lexer *l) {
+    if (l->read_position >= strlen(l->input)) {
         return '\0';
     } else {
         return l->input[l->read_position];

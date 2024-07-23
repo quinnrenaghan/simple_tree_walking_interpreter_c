@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+/* lookup_identifier checks if an identifier string (param) matches
+a Q keyword.*/
 token_type lookup_identifier(char* identifier) {
     if (!strcmp(identifier, "set")) {
         return SET;
