@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "token.h"
+#include <unistd.h>
 
 /* creates a new lexer, which will convert the given string.*/
 lexer *new(char *input) {
@@ -128,16 +129,15 @@ token *next_token(lexer *l) {
             if (is_letter(l->ch)) {
                 my_token->value = read_identifier(l);
                 my_token->type = lookup_identifier(my_token->value);
-                return my_token;
                 // number found.
             } else if (is_digit(l->ch)) {
-                my_token->type = INT;
                 my_token->value = read_int(l);
-                return my_token;
+                my_token->type = INT;
                 // anything else: ILLEGAL
             } else {
                 my_token->type = ILLEGAL;
-                my_token->value = &(l->ch);
+                my_token->value = malloc(sizeof(char) + 1);
+                strcpy(my_token->value, &(l->ch));
             }
     }
     read_char(l);
@@ -149,13 +149,12 @@ token *next_token(lexer *l) {
 char *read_identifier(lexer *l) {
     char *identifier;
     int start_pos = l->position;
-    while (is_letter(l->ch)) {
+    while (is_letter(peek_ahead(l))) {
         read_char(l);
     }
-
-    identifier = malloc(l->position - start_pos + 1);
-    strncpy(identifier, l->input + start_pos, l->position - start_pos);
-    identifier[l->position - start_pos + 1] = '\0';
+    identifier = malloc(l->position + 1 - start_pos + 1);
+    strncpy(identifier, l->input + start_pos, l->position - start_pos + 1);
+    identifier[l->position + 1 - start_pos + 1] = '\0';
 
     return identifier;
 }
@@ -165,13 +164,13 @@ char *read_identifier(lexer *l) {
 char *read_int(lexer *l) {
     char *identifier;
     int start_pos = l->position;
-    while (is_digit(l->ch)) {
+    while (is_digit(peek_ahead(l))) {
         read_char(l);
     }
 
-    identifier = malloc(l->position - start_pos + 1);
-    strncpy(identifier, l->input + start_pos, l->position - start_pos);
-    identifier[l->position - start_pos + 1] = '\0';
+    identifier = malloc(l->position + 1 - start_pos + 1);
+    strncpy(identifier, l->input + start_pos, l->position - start_pos + 1);
+    identifier[l->position + 1 - start_pos + 1] = '\0';
 
     return identifier;
 }
