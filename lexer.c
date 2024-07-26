@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include "token.h"
-#include <unistd.h>
 
 /* creates a new lexer, which will convert the given string.*/
 lexer *new(char *input) {

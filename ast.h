@@ -21,7 +21,7 @@ typedef enum {
 typedef enum {
     LOWEST_PR,
     EQUALS_PR,
-    LESSGREATER_PR,
+    LG_PR,
     SUM_PR,
     PRODUCT_PR,
     PREFIX_PR,
@@ -34,7 +34,7 @@ typedef enum {
     INFIX_EXPR,
     PREFIX_EXPR,
     LITERAL_EXPR,
-    IF_EXPR,
+    COND_EXPR,
     CALL_EXPR
 } expr_type;
 
@@ -87,6 +87,7 @@ typedef struct {
     union {
         int num;
         token* token;
+        bool boolean;
     } val;
 } literal;
 
@@ -97,14 +98,34 @@ typedef struct {
     expr* right;
 } prefix_expr;
 
+/* infix_expr contains expressions on both sides, and an operator in the middle
+ * (5 + 5)*/
+typedef struct {
+    token* operator;
+    expr* right;
+    expr* left;
+} infix_expr;
+
+typedef struct {
+    token* token;
+    expr* condition;
+    stmt_list* consequence;
+    stmt_list* alternative;
+    bool has_else;
+} cond_expr;
+
 /* expr struct. an expr contains a type, and data.*/
 typedef struct expr {
     expr_type type;
     union {
         literal* lit;
-        prefix_expr *pre;
+        prefix_expr* pre;
+        infix_expr* inf;
+        cond_expr* cond;
     } data;
 } expr;
 
+
+precedence get_precedence(token* t);
 
 #endif

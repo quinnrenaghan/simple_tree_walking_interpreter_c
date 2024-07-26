@@ -15,8 +15,10 @@ typedef struct{
     int error_count;
 } parser;
 
-int peek_token_is(parser* p, token_type t);
-int curr_token_is(parser* p, token_type t);
+int peek_precedence(parser* p);
+int curr_precedence(parser* p);
+bool peek_token_is(parser* p, token_type t);
+bool curr_token_is(parser* p, token_type t);
 int expect_peek(parser* p, token_type t);
 char** errors(parser *p);
 void add_error(parser* p, char* error);
@@ -31,5 +33,9 @@ stmt* parse_expr_statement(parser *p);
 expr* parse_expression(parser *p, precedence pr);
 expr* parse_lit(parser *p);
 expr* parse_prefix(parser *p);
+expr* parse_infix(parser* p, expr* left_expr);
+expr* parse_group(parser* p);
+expr* parse_conditional(parser* p);
+stmt_list* parse_block(parser* p);
 
 #endif

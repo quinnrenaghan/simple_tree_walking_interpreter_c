@@ -8,10 +8,13 @@
 #include "lexer.h"
 #include "repl.h"
 #include "token.h"
-#include <unistd.h>
+
+int peek_precedence(parser* p) { return get_precedence(p->peek_token); }
+
+int curr_precedence(parser* p) { return get_precedence(p->curr_token); }
 
 /* checks if the next token matches the parameter.*/
-int peek_token_is(parser* p, token_type t) {
+bool peek_token_is(parser* p, token_type t) {
     if (p->peek_token == NULL) {
         return 0;
     } else {
@@ -20,7 +23,7 @@ int peek_token_is(parser* p, token_type t) {
 }
 
 /* checks if the current token matches the parameter.*/
-int curr_token_is(parser* p, token_type t) {
+bool curr_token_is(parser* p, token_type t) {
     if (p->curr_token == NULL) {
         return 0;
     } else {
@@ -175,24 +178,33 @@ expr* parse_expression(parser* p, precedence pr) {
             left_expr = parse_prefix(p);
             break;
         case LPAREN:
+            left_expr = parse_group(p);
+            break;
         case IF:
-        case FUNCTION:
-        case LBRACE:
+            left_expr = parse_conditional(p);
+            break;
         default: {
             char* error = malloc(MAX_STR_LEN + 1);
-            sprintf(error, "do not have expression supported for token: %s",
+            sprintf(error,
+                    "do not have prefix expression supported for token: %s",
                     p->curr_token->value);
             add_error(p, error);
             left_expr = NULL;
         }
     }
+
+    while (!peek_token_is(p, SEMICOLON) && pr < peek_precedence(p)) {
+        p_next_token(p);
+        left_expr = parse_infix(p, left_expr);
+    }
+
     return left_expr;
 }
 
 /* parses all literals, based on each of the 5 types.*/
 expr* parse_lit(parser* p) {
-    expr* left_expr = malloc(sizeof(expr));
-    left_expr->type = LITERAL_EXPR;
+    expr* ex = malloc(sizeof(expr));
+    ex->type = LITERAL_EXPR;
 
     literal* l = malloc(sizeof(literal));
 
@@ -205,13 +217,19 @@ expr* parse_lit(parser* p) {
             l->type = INT_LIT;
             l->val.num = atoi(p->curr_token->value);
             break;
+        case TRUE:
+        case FALSE:
+            l->type = BOOL_LIT;
+            l->val.boolean = curr_token_is(p, TRUE);
+            break;
         default:
             return NULL;
     }
 
-    left_expr->data.lit = l;
-    return left_expr;
+    ex->data.lit = l;
+    return ex;
 }
+
 
 expr* parse_prefix(parser* p) {
     expr* ex = malloc(sizeof(expr));
@@ -225,4 +243,90 @@ expr* parse_prefix(parser* p) {
     pre->right = parse_expression(p, PREFIX_PR);
     ex->data.pre = pre;
     return ex;
+}
+
+expr* parse_infix(parser* p, expr* left_expr) {
+    expr* ex = malloc(sizeof(expr));
+    ex->type = INFIX_EXPR;
+
+    infix_expr* inf = malloc(sizeof(infix_expr));
+    inf->operator= p->curr_token;
+    inf->left = left_expr;
+
+    precedence prec = curr_precedence(p);
+    p_next_token(p);
+    inf->right = parse_expression(p, prec);
+
+    ex->data.inf = inf;
+    return ex;
+}
+
+expr* parse_group(parser* p) {
+    p_next_token(p);
+
+    expr* ex = parse_expression(p, LOWEST_PR);
+
+    if (!expect_peek(p, RPAREN)) {
+        return NULL;
+    }
+
+    return ex;
+}
+
+expr* parse_conditional(parser* p) {
+    expr* ex = malloc(sizeof(expr));
+    ex->type = COND_EXPR;
+
+    cond_expr* cond = malloc(sizeof(cond_expr));
+    cond->token = p->curr_token;
+    cond->has_else = false;
+
+    if (!expect_peek(p, LPAREN)) {
+        return NULL;
+    }
+
+    p_next_token(p);
+
+    cond->condition = parse_expression(p, LOWEST_PR);
+
+    if (!expect_peek(p, RPAREN)) {
+        return NULL;
+    }
+    if (!expect_peek(p, LBRACE)) {
+        return NULL;
+    }
+
+    cond->consequence = parse_block(p);
+
+    if(peek_token_is(p, ELSE)){
+        p_next_token(p);
+
+        if(!expect_peek(p, LBRACE)){
+            return NULL;
+        }
+        cond->alternative = parse_block(p);
+        cond->has_else = true;
+    }
+    
+    ex->data.cond = cond;
+    return ex;
+}
+
+stmt_list* parse_block(parser* p) {
+    stmt_list* list = malloc(sizeof(stmt_list));
+    list->capacity = MAX_STATEMENTS;
+    list->count = 0;
+    list->statements = malloc(sizeof(stmt*) * list->capacity);
+
+    p_next_token(p);
+
+    while (!curr_token_is(p, RBRACE) && !curr_token_is(p, EOF_TOKEN)) {
+        stmt* stmt = parse_statement(p);
+        if (stmt != NULL) {
+            list->statements[list->count] = stmt;
+            (list->count)++;
+        }
+        p_next_token(p);
+    }
+    return list;
 }
