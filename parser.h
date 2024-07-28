@@ -37,5 +37,7 @@ expr* parse_infix(parser* p, expr* left_expr);
 expr* parse_group(parser* p);
 expr* parse_conditional(parser* p);
 stmt_list* parse_block(parser* p);
+fn* parse_function(parser *p);
+expr_list* parse_args(parser* p);
 
 #endif

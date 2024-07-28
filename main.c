@@ -8,14 +8,16 @@
 #include "token.h"
 void print_set_statement(set_stmt* set, int indent);
 void print_ret_statement(ret_stmt* ret, int indent);
+void print_statement(stmt* s, int indent);
+void print_identifier(token* t, int indent);
 
-void print_expression(expr* expr, int indent) {
+void print_expression(expr* ex, int indent) {
     for (int i = 0; i < indent; i++) {
         printf("\t");
     }
     printf("EXPRESSION FOUND\n");
-    if (expr->type == LITERAL_EXPR) {
-        literal* lit = expr->data.lit;
+    if (ex->type == LITERAL_EXPR) {
+        literal* lit = ex->data.lit;
         for (int i = 0; i < indent + 1; i++) {
             printf("\t");
         }
@@ -35,9 +37,27 @@ void print_expression(expr* expr, int indent) {
             printf("LITERAL DATA: %d\n", lit->val.num);
         } else if (lit->type == BOOL_LIT) {
             printf("LITERAL DATA: %d\n", lit->val.boolean);
+        } else if (lit->type == FN_LIT) {
+            printf("FUNCTION FOUND\n");
+            for (int i = 0; i < indent + 2; i++) {
+                printf("\t");
+            }
+            printf("PARAMS:\n");
+            for (int i = 0; i < lit->val.function->params->count; i++) {
+                print_identifier(lit->val.function->params->tokens[i],
+                                 indent + 3);
+            }
+            for (int i = 0; i < indent + 2; i++) {
+                printf("\t");
+            }
+            printf("BODY:\n");
+            for (int i = 0; i < lit->val.function->body->count; i++) {
+                print_statement(lit->val.function->body->statements[i],
+                                indent + 3);
+            }
         }
-    } else if (expr->type == PREFIX_EXPR) {
-        prefix_expr* pre = expr->data.pre;
+    } else if (ex->type == PREFIX_EXPR) {
+        prefix_expr* pre = ex->data.pre;
         for (int i = 0; i < indent + 1; i++) {
             printf("\t");
         }
@@ -54,8 +74,8 @@ void print_expression(expr* expr, int indent) {
         printf("RIGHT:\n");
         print_expression(pre->right, indent + 2);
 
-    } else if (expr->type == INFIX_EXPR) {
-        infix_expr* inf = expr->data.inf;
+    } else if (ex->type == INFIX_EXPR) {
+        infix_expr* inf = ex->data.inf;
 
         for (int i = 0; i < indent + 1; i++) {
             printf("\t");
@@ -78,8 +98,8 @@ void print_expression(expr* expr, int indent) {
 
         printf("RIGHT:\n");
         print_expression(inf->right, indent + 2);
-    } else if (expr->type == COND_EXPR) {
-        cond_expr* cond = expr->data.cond;
+    } else if (ex->type == COND_EXPR) {
+        cond_expr* cond = ex->data.cond;
         for (int i = 0; i < indent + 1; i++) {
             printf("\t");
         }
@@ -97,31 +117,51 @@ void print_expression(expr* expr, int indent) {
 
         for (int i = 0; i < cond->consequence->count; i++) {
             stmt* s = cond->consequence->statements[i];
-            if (s->type == SET_STMT) {
-                print_set_statement(s->data.set, indent + 3);
-            } else if (s->type == RET_STMT) {
-                print_ret_statement(s->data.ret, indent + 3);
-            } else if (s->type == EXPR) {
-                print_expression(s->data.expr, indent + 3);
-            }
+            print_statement(s, indent + 3);
         }
-        if (cond->has_else) {
+        if (cond->alternative != NULL) {
             for (int i = 0; i < indent + 2; i++) {
                 printf("\t");
             }
             printf("ALTERNATIVE:\n");
             for (int i = 0; i < cond->alternative->count; i++) {
                 stmt* s = cond->alternative->statements[i];
-                if (s->type == SET_STMT) {
-                    print_set_statement(s->data.set, indent + 3);
-                } else if (s->type == RET_STMT) {
-                    print_ret_statement(s->data.ret, indent + 3);
-                } else if (s->type == EXPR) {
-                    print_expression(s->data.expr, indent + 3);
-                }
+                print_statement(s, indent + 3);
             }
         }
+    } else if (ex->type == CALL_EXPR) {
+        call_expr* call = ex->data.call;
+        for (int i = 0; i < indent + 1; i++) {
+            printf("\t");
+        }
+        printf("CALL FOUND\n");
+        for (int i = 0; i < indent + 2; i++) {
+            printf("\t");
+        }
+
+        printf("FUNCTION:\n");
+        print_expression(call->fn, indent + 2);
+
+        for (int i = 0; i < indent + 2; i++) {
+            printf("\t");
+        }
+        printf("ARGS:\n");
+        for (int i = 0; i < call->args->count; i++) {
+            expr *e = call->args->exprs[i];
+            print_expression(e, indent + 3);
+        }
     }
+}
+
+void print_identifier(token* t, int indent) {
+    for (int i = 0; i < indent; i++) {
+        printf("\t");
+    }
+    printf("TOKEN TYPE: %d\n", t->type);
+    for (int i = 0; i < indent; i++) {
+        printf("\t");
+    }
+    printf("TOKEN VALUE: %s\n", t->value);
 }
 
 void print_set_statement(set_stmt* set, int indent) {
@@ -139,6 +179,13 @@ void print_set_statement(set_stmt* set, int indent) {
         printf("\t");
     }
     printf("IDENTIFIER TYPE: %d\n", set->identifier->type);
+
+    for (int i = 0; i < indent + 1; i++) {
+        printf("\t");
+    }
+
+    printf("VALUE:\n");
+    print_expression(set->value, indent + 1);
 }
 
 void print_ret_statement(ret_stmt* ret, int indent) {
@@ -146,6 +193,21 @@ void print_ret_statement(ret_stmt* ret, int indent) {
         printf("\t");
     }
     printf("RET STATEMENT FOUND.\n");
+    for (int i = 0; i < indent + 1; i++) {
+        printf("\t");
+    }
+    printf("VALUE:\n");
+    print_expression(ret->value, indent + 1);
+}
+
+void print_statement(stmt* s, int indent) {
+    if (s->type == SET_STMT) {
+        print_set_statement(s->data.set, indent);
+    } else if (s->type == RET_STMT) {
+        print_ret_statement(s->data.ret, indent);
+    } else if (s->type == EXPR) {
+        print_expression(s->data.expr, indent);
+    }
 }
 
 int main() {

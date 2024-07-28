@@ -5,6 +5,7 @@
 #define MAX_STATEMENTS 500
 #define MAX_ERRORS 100
 #define MAX_STR_LEN 100
+#define MAX_PARAMS 20
 
 /* enum: all the token types*/
 typedef enum {

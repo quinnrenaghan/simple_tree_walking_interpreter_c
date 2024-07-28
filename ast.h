@@ -81,6 +81,24 @@ typedef struct stmt_list {
     int capacity;
 } stmt_list;
 
+typedef struct {
+    token** tokens;
+    int count;
+    int capacity;
+} token_list;
+
+typedef struct {
+    expr** exprs;
+    int count;
+    int capacity;
+} expr_list;
+
+typedef struct {
+    token* token;
+    token_list* params;
+    stmt_list* body;
+} fn;
+
 /* literal struct. a literal stores the literal type, and the value*/
 typedef struct {
     literal_type type;
@@ -88,6 +106,7 @@ typedef struct {
         int num;
         token* token;
         bool boolean;
+        fn* function;
     } val;
 } literal;
 
@@ -111,8 +130,13 @@ typedef struct {
     expr* condition;
     stmt_list* consequence;
     stmt_list* alternative;
-    bool has_else;
 } cond_expr;
+
+typedef struct {
+    token* token;
+    expr* fn;
+    expr_list* args;
+} call_expr;
 
 /* expr struct. an expr contains a type, and data.*/
 typedef struct expr {
@@ -122,9 +146,9 @@ typedef struct expr {
         prefix_expr* pre;
         infix_expr* inf;
         cond_expr* cond;
+        call_expr* call;
     } data;
 } expr;
-
 
 precedence get_precedence(token* t);
 
