@@ -6,6 +6,9 @@
 #include "parser.h"
 #include "repl.h"
 #include "token.h"
+#include "eval.h"
+
+/*
 void print_set_statement(set_stmt* set, int indent);
 void print_ret_statement(ret_stmt* ret, int indent);
 void print_statement(stmt* s, int indent);
@@ -234,6 +237,28 @@ int main() {
                     expr* expr = s->data.expr;
                     print_expression(expr, 0);
                 }
+            }
+        }
+        printf("$ ");
+    }
+    return 0;
+} */
+
+int main() {
+    char* input = malloc(MAX_STR_LEN + 1);
+    printf("$ ");
+    while (fgets(input, MAX_STR_LEN, stdin)) {
+        lexer* l = new (input);
+        parser* p = p_new(l);
+        stmt_list* result = parse_program(p);
+        if (p->error_count != 0) {
+            for (int i = 0; i < p->error_count; i++) {
+                printf("%s\n", p->errors[i]);
+            }
+        } else {
+            object* evaluated = eval_program(result);
+            if(evaluated != NULL){
+                printf("%s\n", evaluated->to_string(evaluated));
             }
         }
         printf("$ ");

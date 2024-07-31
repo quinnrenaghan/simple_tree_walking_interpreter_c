@@ -1,7 +1,9 @@
 #include "parser.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "ast.h"
 #include "lexer.h"
 #include "repl.h"
@@ -225,6 +227,7 @@ expr* parse_lit(parser* p) {
     return ex;
 }
 
+/* takes current token as the operator, and creates prefix expression*/
 expr* parse_prefix(parser* p) {
     expr* ex = malloc(sizeof(expr));
     ex->type = PREFIX_EXPR;
@@ -236,6 +239,8 @@ expr* parse_prefix(parser* p) {
     return ex;
 }
 
+/* takes current token as the operator, and the expression parameter as the left
+side, and creates an infix expression or function call*/
 expr* parse_infix(parser* p, expr* left_expr) {
     expr* ex = malloc(sizeof(expr));
     switch (p->curr_token->type) {
@@ -260,6 +265,7 @@ expr* parse_infix(parser* p, expr* left_expr) {
     return ex;
 }
 
+/* parses parentheses (groups) with highest precedence*/
 expr* parse_group(parser* p) {
     p_next_token(p);
     expr* ex = parse_expression(p, LOWEST_PR);
@@ -269,6 +275,7 @@ expr* parse_group(parser* p) {
     return ex;
 }
 
+/* returns conditional expression starting with the current token*/
 expr* parse_conditional(parser* p) {
     expr* ex = malloc(sizeof(expr));
     ex->type = COND_EXPR;
@@ -298,6 +305,7 @@ expr* parse_conditional(parser* p) {
     return ex;
 }
 
+/* returns list of statements representing block enclosed in curly braces*/
 stmt_list* parse_block(parser* p) {
     stmt_list* list = malloc(sizeof(stmt_list));
     list->capacity = MAX_STATEMENTS;
@@ -315,6 +323,8 @@ stmt_list* parse_block(parser* p) {
     return list;
 }
 
+/* returns list of comma separated parameters (identifiers) in a function
+ * definition, starting on the current token*/
 token_list* parse_params(parser* p) {
     token_list* list = malloc(sizeof(token_list));
     list->count = 0;
@@ -339,6 +349,7 @@ token_list* parse_params(parser* p) {
     return list;
 }
 
+/* returns function, starting on the current token*/
 fn* parse_function(parser* p) {
     fn* func = malloc(sizeof(fn));
     func->token = p->curr_token;
@@ -353,6 +364,8 @@ fn* parse_function(parser* p) {
     return func;
 }
 
+/* returns list of comma separated arguments in a function call, starting on the
+ * current token*/
 expr_list* parse_args(parser* p) {
     expr_list* list = malloc(sizeof(expr_list));
     list->count = 0;

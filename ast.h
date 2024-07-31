@@ -2,7 +2,6 @@
 #define AST_H
 
 #include <stdbool.h>
-
 #include "token.h"
 
 /* enum: all the literal types.*/

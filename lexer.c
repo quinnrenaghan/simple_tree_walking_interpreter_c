@@ -1,10 +1,10 @@
 #include "lexer.h"
+#include "token.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "token.h"
 
 /* creates a new lexer, which will convert the given string.*/
 lexer *new(char *input) {
