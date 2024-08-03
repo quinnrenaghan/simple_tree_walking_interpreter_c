@@ -47,7 +47,7 @@ void add_error(parser *p, char *error) {
 
 void peek_error(parser *p, token_type t) {
     p->errors[p->error_count] = malloc(MAX_STR_LEN + 1);
-    sprintf(p->errors[p->error_count], "expected type: %d, received type: %d",
+    sprintf(p->errors[p->error_count], "expected type: %d, received type: %d - see enum definition",
             t, p->peek_token->type);
     (p->error_count)++;
 }
