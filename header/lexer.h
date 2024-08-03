@@ -11,10 +11,10 @@ typedef struct {
 } lexer;
 
 lexer* new(char *input);
-void read_char(lexer *l);
 token* next_token(lexer *l);
 char* read_identifier(lexer *l);
 char* read_int(lexer *l);
+void read_char(lexer *l);
 int is_letter(char c);
 int is_digit(char c);
 void eat_whitespace(lexer *l);

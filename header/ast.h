@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "token.h"
 
+
 typedef enum {
     INT_LIT,
     STRING_LIT,
