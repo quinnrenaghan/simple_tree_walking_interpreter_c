@@ -150,7 +150,7 @@ token *next_token(lexer *l) {
 }
 
 /* reads letters until non-letter character, stores it in string, and returns
- * string.*/
+ * string*/
 char *read_identifier(lexer *l) {
     char *identifier;
     int start_pos = l->position;
@@ -165,7 +165,7 @@ char *read_identifier(lexer *l) {
 }
 
 /* read_int. reads digits until non-digit character, stores it in string, and
- * returns string.*/
+ * returns string*/
 char *read_int(lexer *l) {
     char *identifier;
     int start_pos = l->position;
