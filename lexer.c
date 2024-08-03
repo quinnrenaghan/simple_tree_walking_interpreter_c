@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 // MALLOC: LEXER, TOKEN->VALUE, TOKEN
 
@@ -119,6 +120,10 @@ token *next_token(lexer *l) {
             my_token->value = malloc(sizeof(char) + 1);
             strcpy(my_token->value, "}");
             break;
+        case '"':
+            my_token->type = STRING;
+            my_token->value = read_string(l);
+            break;
         case '\0':
             my_token->type = EOF_TOKEN;
             my_token->value = malloc(sizeof(char) + 1);
@@ -174,6 +179,23 @@ char *read_int(lexer *l) {
 
     return identifier;
 }
+
+char *read_string(lexer *l){
+    char *string;
+    int start_pos = l->position + 1;
+    while(true){
+        read_char(l);
+        if(l->ch == '"' || l->ch == '\0'){
+            break;
+        }
+    }
+    string = malloc(l->position + 1 - start_pos);
+    strncpy(string, l->input + start_pos, l->position - start_pos);
+    string[l->position + 1 - start_pos] = '\0';
+    
+    return string;
+}
+
 
 /* checks if character is a letter.*/
 int is_letter(char c) {

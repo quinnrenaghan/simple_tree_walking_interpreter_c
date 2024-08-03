@@ -50,6 +50,7 @@ typedef enum {
     // type
     IDENT,
     INT,
+    STRING,
 } token_type;
 
 typedef struct {

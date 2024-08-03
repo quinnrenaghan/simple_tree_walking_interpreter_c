@@ -10,7 +10,7 @@
 /* begins the read, evaluate, print, and loop.*/
 int start(FILE* in, FILE* out) {
     char* input = malloc(MAX_STR_LEN + 1);
-    printf("$ ");
+    printf("> ");
 
     environment* env = malloc(sizeof(environment));
     env->capacity = MAX_ENV_SIZE;
@@ -28,14 +28,14 @@ int start(FILE* in, FILE* out) {
             }
         } else {
             object* evaluated = eval_program(result, env);
-            if (evaluated != NULL) {
+            if (evaluated != NULL && evaluated->to_string != NULL) {
                 printf("%s\n", evaluated->to_string(evaluated));
             }
         }
 
         release_token(p->curr_token);
         release_token(p->peek_token);
-        printf("$ ");
+        printf("> ");
     }
     return 0;
 }

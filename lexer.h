@@ -19,5 +19,6 @@ int is_letter(char c);
 int is_digit(char c);
 void eat_whitespace(lexer *l);
 char peek_ahead(lexer *l);
+char *read_string(lexer *l);
 
 #endif

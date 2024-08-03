@@ -55,6 +55,7 @@ typedef struct {
         ret_stmt *ret;
         expr *expr;
     } data;
+    int ref_count;
 } stmt;
 
 typedef struct stmt_list {
@@ -87,6 +88,7 @@ typedef struct {
         token *token;
         bool boolean;
         fn *function;
+        char* string;
     } val;
 } literal;
 

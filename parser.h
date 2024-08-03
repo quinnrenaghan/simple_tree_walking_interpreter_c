@@ -38,4 +38,7 @@ stmt_list *parse_block(parser *p);
 fn *parse_function(parser *p);
 expr_list *parse_args(parser *p);
 
+void release_stmt(stmt *s);
+void retain_stmt(stmt *s);
+
 #endif

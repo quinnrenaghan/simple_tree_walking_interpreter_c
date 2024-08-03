@@ -8,7 +8,7 @@
 #include "parser.h"
 #include "token.h"
 
-object* eval_program(stmt_list *program, environment *env) {
+object *eval_program(stmt_list *program, environment *env) {
     object *obj;
     for (int i = 0; i < program->count; i++) {
         obj = eval_stmt(program->statements[i], env);
@@ -20,8 +20,8 @@ object* eval_program(stmt_list *program, environment *env) {
     return obj;
 }
 
-object* eval_stmt(stmt* stmt, environment* env) {
-    object* obj;
+object *eval_stmt(stmt *stmt, environment *env) {
+    object *obj;
     switch (stmt->type) {
         case EXPR:
             obj = eval_expr(stmt->data.expr, env);
@@ -37,35 +37,35 @@ object* eval_stmt(stmt* stmt, environment* env) {
             obj->type = NULL_OBJ;
             break;
     }
+    release_stmt(stmt);
     return obj;
 }
 
-object* eval_set(set_stmt* set, environment* env) {
-    object* value = eval_expr(set->value, env);
+object *eval_set(set_stmt *set, environment *env) {
+    object *value = eval_expr(set->value, env);
     if (is_error(value)) {
         return value;
     }
     env_set(set->identifier, value, env);
-    release_token(set->identifier);
     return value;
 }
 
-object* eval_ret(ret_stmt* ret, environment* env) {
-    object* value = eval_expr(ret->value, env);
+object *eval_ret(ret_stmt *ret, environment *env) {
+    object *value = eval_expr(ret->value, env);
     if (is_error(value)) {
         return value;
     }
-    object* obj = malloc(sizeof(object));
+    object *obj = malloc(sizeof(object));
     obj->type = RETURN_OBJ;
     obj->val.return_value = value;
     obj->to_string = print_ret;
     return obj;
 }
 
-object* eval_expr(expr* ex, environment* env) {
+object *eval_expr(expr *ex, environment *env) {
     object *obj, *right, *left, *condition, *func;
-    literal* l;
-    call_expr* c;
+    literal *l;
+    call_expr *c;
     switch (ex->type) {
         case LITERAL_EXPR:
             l = ex->data.lit;
@@ -89,19 +89,25 @@ object* eval_expr(expr* ex, environment* env) {
                         obj->to_string = print_error;
                         obj->type = ERROR_OBJ;
                         obj->val.error_message = malloc(MAX_STR_LEN + 1);
-                        strcpy(obj->val.error_message, "undefined identifier %s");
+                        strcpy(obj->val.error_message, "undefined identifier");
                     }
                     break;
                 case FN_LIT:
                     obj = malloc(sizeof(object));
                     obj->type = FUNCTION_OBJ;
-                    fn* fn_literal = l->val.function;
+                    fn *fn_literal = l->val.function;
                     obj->val.function = malloc(sizeof(function));
 
                     obj->val.function->body = fn_literal->body;
                     obj->val.function->params = fn_literal->params;
                     obj->val.function->env = env;
-                    obj->to_string = print_function;
+                    obj->to_string = NULL;
+                    break;
+                case STRING_LIT:
+                    obj = malloc(sizeof(object));
+                    obj->type = STRING_OBJ;
+                    obj->val.string = l->val.string;
+                    obj->to_string = print_string;
                     break;
                 default:
                     obj = NULL;
@@ -147,7 +153,7 @@ object* eval_expr(expr* ex, environment* env) {
             if (is_error(func)) {
                 return func;
             }
-            object_list* args = eval_args(c->args, env);
+            object_list *args = eval_args(c->args, env);
             if (args->count == 1 && is_error(args->objects[0])) {
                 return args->objects[0];
             }
@@ -162,34 +168,34 @@ object* eval_expr(expr* ex, environment* env) {
     return obj;
 }
 
-object* apply_function(object* func, object_list* args) {
-    environment* extended_env = malloc(sizeof(environment));
+object *apply_function(object *func, object_list *args) {
+    environment *extended_env = malloc(sizeof(environment));
 
-    function* f = func->val.function;
+    function *f = func->val.function;
     extended_env->outer = f->env;
     extended_env->count = 0;
     extended_env->capacity = MAX_ENV_SIZE;
-    extended_env->bindings = malloc(sizeof(binding*) * extended_env->capacity);
+    extended_env->bindings = malloc(sizeof(binding *) * extended_env->capacity);
 
     for (int i = 0; i < f->params->count; i++) {
         env_set(f->params->tokens[i], args->objects[i], extended_env);
     }
 
-    object* evaluated = eval_program(f->body, extended_env);
+    object *evaluated = eval_program(f->body, extended_env);
     if (evaluated->type == RETURN_OBJ) {
         return evaluated->val.return_value;
     }
     return evaluated;
 }
 
-object_list* eval_args(expr_list* args, environment* env) {
-    object_list* list = malloc(sizeof(object_list));
+object_list *eval_args(expr_list *args, environment *env) {
+    object_list *list = malloc(sizeof(object_list));
     list->count = 0;
     list->capacity = MAX_PARAMS;
-    list->objects = malloc(sizeof(object*) * list->capacity);
+    list->objects = malloc(sizeof(object *) * list->capacity);
 
     for (int i = 0; i < args->count; i++) {
-        object* obj = eval_expr(args->exprs[i], env);
+        object *obj = eval_expr(args->exprs[i], env);
         if (is_error(obj)) {
             for (int j = 0; j < i; j++) {
                 free(list->objects[j]);
@@ -204,8 +210,8 @@ object_list* eval_args(expr_list* args, environment* env) {
     return list;
 }
 
-object* eval_infix(token* operator, object * right, object* left) {
-    object* obj;
+object *eval_infix(token *operator, object * right, object *left) {
+    object *obj;
     if (left->type == INT_OBJ && right->type == INT_OBJ) {
         obj = eval_integer_infix(operator, right, left);
     } else if (operator->type == EQ && right->type == BOOL_OBJ &&
@@ -220,6 +226,14 @@ object* eval_infix(token* operator, object * right, object* left) {
         obj->type = BOOL_OBJ;
         obj->to_string = print_bool;
         obj->val.boolean = (left->val.boolean != right->val.boolean);
+    } else if (operator->type == PLUS && right->type == STRING_OBJ &&
+               left->type == STRING_OBJ) {
+        obj = malloc(sizeof(object));
+        obj->type = STRING_OBJ;
+        obj->to_string = print_string;
+        obj->val.string = malloc(MAX_STR_LEN + 1);
+        strcat(obj->val.string, left->val.string);
+        strcat(obj->val.string, right->val.string);
     } else {
         obj = malloc(sizeof(object));
         obj->to_string = print_error;
@@ -230,10 +244,10 @@ object* eval_infix(token* operator, object * right, object* left) {
     return obj;
 }
 
-object* eval_integer_infix(token* operator, object * right, object* left) {
+object *eval_integer_infix(token *operator, object * right, object *left) {
     int left_val = left->val.num;
     int right_val = right->val.num;
-    object* obj = malloc(sizeof(object));
+    object *obj = malloc(sizeof(object));
 
     switch (operator->type) {
         case PLUS:
@@ -283,8 +297,8 @@ object* eval_integer_infix(token* operator, object * right, object* left) {
     return obj;
 }
 
-object* eval_prefix(token* operator, object * right) {
-    object* obj;
+object *eval_prefix(token *operator, object * right) {
+    object *obj;
     switch (operator->type) {
         case BANG:
             obj = eval_bang(right);
@@ -299,8 +313,8 @@ object* eval_prefix(token* operator, object * right) {
     return obj;
 }
 
-object* eval_minus(object* right) {
-    object* obj = malloc(sizeof(object));
+object *eval_minus(object *right) {
+    object *obj = malloc(sizeof(object));
     if (right->type != INT_OBJ) {
         obj->to_string = print_error;
         obj->type = ERROR_OBJ;
@@ -313,8 +327,8 @@ object* eval_minus(object* right) {
     }
     return obj;
 }
-object* eval_bang(object* right) {
-    object* obj = malloc(sizeof(object));
+object *eval_bang(object *right) {
+    object *obj = malloc(sizeof(object));
     obj->type = BOOL_OBJ;
     obj->to_string = print_bool;
     switch (right->type) {
@@ -338,25 +352,25 @@ object* eval_bang(object* right) {
     return obj;
 }
 
-char* print_int(object* obj) {
-    char* str = malloc(MAX_STR_LEN + 1);
+char *print_int(object *obj) {
+    char *str = malloc(MAX_STR_LEN + 1);
     sprintf(str, "%d", obj->val.num);
     return str;
 }
 
-char* print_bool(object* obj) {
-    char* str = malloc(MAX_STR_LEN + 1);
+char *print_bool(object *obj) {
+    char *str = malloc(MAX_STR_LEN + 1);
     sprintf(str, "%s", obj->val.boolean ? "true" : "false");
     return str;
 }
 
-char* print_null(object* obj) {
-    char* str = malloc(5);
+char *print_null(object *obj) {
+    char *str = malloc(5);
     strcpy(str, "null");
     return str;
 }
 
-char* print_ret(object* obj) {
+char *print_ret(object *obj) {
     switch (obj->val.return_value->type) {
         case INT_OBJ:
             return print_int(obj->val.return_value);
@@ -369,17 +383,15 @@ char* print_ret(object* obj) {
     }
 }
 
-char* print_error(object* obj) {
-    char* str = malloc(MAX_STR_LEN + 1);
+char *print_error(object *obj) {
+    char *str = malloc(MAX_STR_LEN + 1);
     sprintf(str, "ERROR: %s", obj->val.error_message);
     return str;
 }
 
-char* print_function(object* obj) {
-    return "";
-}
+char *print_string(object *obj) { return obj->val.string; }
 
-bool is_truthy(object* obj) {
+bool is_truthy(object *obj) {
     if (obj == NULL || obj->type == NULL_OBJ) {
         return false;
     }
@@ -392,21 +404,21 @@ bool is_truthy(object* obj) {
     return true;
 }
 
-bool is_error(object* obj) {
+bool is_error(object *obj) {
     if (obj != NULL) {
         return obj->type == ERROR_OBJ;
     }
     return false;
 }
 
-object* env_get(token* ident, environment* env) {
+object *env_get(token *ident, environment *env) {
     for (int i = 0; i < env->count; i++) {
         if (!strcmp(env->bindings[i]->identifier->value, ident->value)) {
             return env->bindings[i]->value;
         }
     }
     if (env->outer != NULL) {
-        object* result = env_get(ident, env->outer);
+        object *result = env_get(ident, env->outer);
         if (result != NULL) {
             return result;
         }
@@ -414,11 +426,10 @@ object* env_get(token* ident, environment* env) {
     return NULL;
 }
 
-object* env_set(token* ident, object* obj, environment* env) {
+object *env_set(token *ident, object *obj, environment *env) {
     for (int i = 0; i < env->count; i++) {
         if (!strcmp(env->bindings[i]->identifier->value, ident->value)) {
             env->bindings[i]->value = obj;
-            release_token(ident);
             return obj;
         }
     }

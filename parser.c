@@ -61,6 +61,7 @@ void p_next_token(parser *p) {
 stmt *parse_ret_statement(parser *p) {
     stmt *s = malloc(sizeof(stmt));
     s->type = RET_STMT;
+    s->ref_count = 1;
     ret_stmt *ret = malloc(sizeof(ret_stmt));
     p_next_token(p);
     ret->value = parse_expression(p, LOWEST_PR);
@@ -74,6 +75,7 @@ stmt *parse_ret_statement(parser *p) {
 stmt *parse_set_statement(parser *p) {
     stmt *s = malloc(sizeof(stmt));
     s->type = SET_STMT;
+    s->ref_count = 1;
     set_stmt *curr_set = malloc(sizeof(set_stmt));
     if (!expect_peek(p, IDENT)) {
         return NULL;
@@ -109,7 +111,7 @@ stmt_list *parse_program(parser *p) {
     stmt_list *stmt_list = malloc(sizeof(stmt_list));
     stmt_list->count = 0;
     stmt_list->capacity = MAX_STATEMENTS;
-    stmt_list->statements = malloc(sizeof(stmt*)  *stmt_list->capacity);
+    stmt_list->statements = malloc(sizeof(stmt *) * stmt_list->capacity);
     while (p->curr_token->type != EOF_TOKEN) {
         stmt *stmt = parse_statement(p);
         if (stmt != NULL) {
@@ -126,7 +128,7 @@ parser *p_new(lexer *lexer) {
     p->l = lexer;
     p_next_token(p);
     p_next_token(p);
-    p->errors = malloc(sizeof(char*)  *MAX_ERRORS);
+    p->errors = malloc(sizeof(char *) * MAX_ERRORS);
     p->error_count = 0;
     return p;
 }
@@ -134,6 +136,7 @@ parser *p_new(lexer *lexer) {
 stmt *parse_expr_statement(parser *p) {
     stmt *s = malloc(sizeof(stmt));
     s->type = EXPR;
+    s->ref_count = 1;
     expr *expr = malloc(sizeof(expr));
     expr = parse_expression(p, LOWEST_PR);
     s->data.expr = expr;
@@ -151,6 +154,7 @@ expr *parse_expression(parser *p, precedence pr) {
         case TRUE:
         case FALSE:
         case FUNCTION:
+        case STRING:
             left_expr = parse_lit(p);
             break;
         case MINUS:
@@ -202,6 +206,11 @@ expr *parse_lit(parser *p) {
         case FUNCTION:
             l->type = FN_LIT;
             l->val.function = parse_function(p);
+            break;
+        case STRING:
+            l->type = STRING_LIT;
+            l->val.string = malloc(strlen(p->curr_token->value) + 1);
+            strcpy(l->val.string, p->curr_token->value);
             break;
         default:
             return NULL;
@@ -287,7 +296,7 @@ stmt_list *parse_block(parser *p) {
     stmt_list *list = malloc(sizeof(stmt_list));
     list->capacity = MAX_STATEMENTS;
     list->count = 0;
-    list->statements = malloc(sizeof(stmt*)  *list->capacity);
+    list->statements = malloc(sizeof(stmt *) * list->capacity);
     p_next_token(p);
     while (!curr_token_is(p, RBRACE) && !curr_token_is(p, EOF_TOKEN)) {
         stmt *stmt = parse_statement(p);
@@ -304,7 +313,7 @@ token_list *parse_params(parser *p) {
     token_list *list = malloc(sizeof(token_list));
     list->count = 0;
     list->capacity = MAX_PARAMS;
-    list->tokens = malloc(sizeof(token*)  *list->capacity);
+    list->tokens = malloc(sizeof(token *) * list->capacity);
     if (peek_token_is(p, RPAREN)) {
         p_next_token(p);
         return list;
@@ -343,7 +352,7 @@ expr_list *parse_args(parser *p) {
     expr_list *list = malloc(sizeof(expr_list));
     list->count = 0;
     list->capacity = MAX_PARAMS;
-    list->exprs = malloc(sizeof(expr*)  *list->capacity);
+    list->exprs = malloc(sizeof(expr *) * list->capacity);
     if (peek_token_is(p, RPAREN)) {
         p_next_token(p);
         return list;
@@ -361,4 +370,23 @@ expr_list *parse_args(parser *p) {
         return NULL;
     }
     return list;
+}
+
+void release_stmt(stmt *s) {
+    if (s->ref_count == 1) {
+        if (s->type == RET_STMT) {
+            free(s->data.ret->value);
+            free(s->data.ret);
+        } else if (s->type == SET) {
+            free(s->data.set);
+        }
+    } else {
+        s->ref_count--;
+    }
+}
+
+void retain_stmt(stmt *s){
+    if(s != NULL){
+        s->ref_count++;
+    }
 }
