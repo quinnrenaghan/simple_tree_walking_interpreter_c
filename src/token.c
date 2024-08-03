@@ -41,7 +41,7 @@ void release_token(token *token) {
 
 void retain_token(token *token){
     if(token != NULL){
-        token->ref_count++;
+        (token->ref_count++);
     }
 }
 
