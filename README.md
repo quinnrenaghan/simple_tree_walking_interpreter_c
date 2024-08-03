@@ -80,7 +80,7 @@ note: functions implicitly return the value of the last statement (if no other r
 ```
 
 ## Garbage Collection
-For garbage collection, I wrote a reference count garbage collector, which recovers the memory used by tokens, statements, and objects, except those which persist throughout a program (identifiers, function definitions, etc.). This memory is instead freed by the machine when the environment terminates at the end of the program. I deemed this acceptable, as the environment will not take up much memory, especially considering that this interpreter is desgined for small programs.
+For garbage collection, I wrote a reference count garbage collector, which recovers most of the memory used by tokens, statements, and objects. It does not free the memory used by structures that persist throughout a program (identifiers, function definitions, etc.). This memory is instead freed by the machine when the environment terminates at the end of the program. I deemed this acceptable, as the environment will not take up much memory for small programs.
 
 ## Note
 This interpreter was meant as a learning experience, and thus does not support many features found in typical programming languages. 
