@@ -1,7 +1,7 @@
 #include "ast.h"
 #include "token.h"
 
-precedence get_precedence(token* t) {
+precedence get_precedence(token *t) {
     switch (t->type) {
     case EQ:
         return EQUALS_PR;

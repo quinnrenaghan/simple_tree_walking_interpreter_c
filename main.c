@@ -2,11 +2,11 @@
 #include <stdlib.h>
 
 #include "ast.h"
+#include "eval.h"
 #include "lexer.h"
 #include "parser.h"
 #include "repl.h"
 #include "token.h"
-#include "eval.h"
 
 /*
 void print_set_statement(set_stmt* set, int indent);
@@ -247,6 +247,13 @@ int main() {
 int main() {
     char* input = malloc(MAX_STR_LEN + 1);
     printf("$ ");
+
+    environment* env = malloc(sizeof(environment));
+    env->capacity = MAX_ENV_SIZE;
+    env->count = 0;
+    env->bindings = malloc(sizeof(binding*) * MAX_ENV_SIZE);
+    env->outer = NULL;
+
     while (fgets(input, MAX_STR_LEN, stdin)) {
         lexer* l = new (input);
         parser* p = p_new(l);
@@ -256,12 +263,16 @@ int main() {
                 printf("%s\n", p->errors[i]);
             }
         } else {
-            object* evaluated = eval_program(result);
-            if(evaluated != NULL){
+            object* evaluated = eval_program(result, env);
+            if (evaluated != NULL) {
                 printf("%s\n", evaluated->to_string(evaluated));
             }
         }
+
+        release_token(p->curr_token);
+        release_token(p->peek_token);
         printf("$ ");
     }
+    printf("REPORT:\nTOKEN CREATED: %d\nTOKEN FREED: %d\n", token_created, token_freed);
     return 0;
 }

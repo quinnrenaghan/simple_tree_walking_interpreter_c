@@ -1,13 +1,16 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-/* constants to be used throughout the project*/
+// CONSTANTS
 #define MAX_STATEMENTS 500
 #define MAX_ERRORS 100
 #define MAX_STR_LEN 100
 #define MAX_PARAMS 20
+#define MAX_ENV_SIZE 200
 
-/* enum: all the token types*/
+extern int token_created;
+extern int token_freed;
+
 typedef enum {
     // operators
     ASSIGN,
@@ -49,12 +52,15 @@ typedef enum {
     INT,
 } token_type;
 
-/* a token has a type and a string value.*/
 typedef struct {
     token_type type;
-    char* value;
+    char *value;
+    int ref_count;
 } token;
 
-token_type lookup_identifier(char* identifier);
+token_type lookup_identifier(char *identifier);
+void release_token(token *token);
+void retain_token(token *token);
+token* create_token(token *token);
 
 #endif

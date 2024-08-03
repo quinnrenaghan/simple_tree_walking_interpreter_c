@@ -2,10 +2,12 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
-/* lookup_identifier checks if an identifier string (param) matches
-a Q keyword.*/
-token_type lookup_identifier(char* identifier) {
+int token_created = 0;
+int token_freed = 0;
+
+token_type lookup_identifier(char *identifier) {
     if (!strcmp(identifier, "set")) {
         return SET;
     } else if (!strcmp(identifier, "fn")) {
@@ -23,4 +25,29 @@ token_type lookup_identifier(char* identifier) {
     } else {
         return IDENT;
     }
+}
+
+void release_token(token *token) {
+    if (token != NULL) {
+        if (token->ref_count == 1) {
+            token_freed++;
+            free(token->value);
+            free(token);
+        } else {
+            token->ref_count--;
+        }
+    }
+}
+
+void retain_token(token *token){
+    if(token != NULL){
+        token->ref_count++;
+    }
+}
+
+token *create_token(token *t){
+    t = malloc(sizeof(token));
+    t->ref_count = 1;
+    token_created++;
+    return t;
 }

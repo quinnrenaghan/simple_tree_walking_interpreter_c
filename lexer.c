@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+// MALLOC: LEXER, TOKEN->VALUE, TOKEN
 
 /* creates a new lexer, which will convert the given string.*/
 lexer *new(char *input) {
@@ -29,8 +30,8 @@ void read_char(lexer *l) {
 /* returns the token associated with the character that the lexer currently sits
  * on.*/
 token *next_token(lexer *l) {
-    token *my_token = malloc(sizeof(token));
     eat_whitespace(l);
+    token *my_token = create_token(my_token);
     switch (l->ch) {
         // check for 2 character token.
         case '=':
