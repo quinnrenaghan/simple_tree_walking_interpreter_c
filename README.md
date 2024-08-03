@@ -64,7 +64,7 @@ true
 > set callthreetimes = fn(x, func) { return func(func(func(x))); }
 > set double = fn(x) { (x * 2); }
 > callthreetimes(2, double);
-16
+8
 ```
 note: functions implicitly return the value of the last statement (if no other return is specified)!
 
