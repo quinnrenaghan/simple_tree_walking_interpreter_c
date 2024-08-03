@@ -2,15 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "token.h"
 #include "ast.h"
-#include "parser.h"
 #include "eval.h"
+#include "parser.h"
+#include "token.h"
 
 /* begins the read, evaluate, print, and loop.*/
 int start(FILE* in, FILE* out) {
     char* input = malloc(MAX_STR_LEN + 1);
-    printf("> ");
+    if (in == stdin) {
+        printf("> ");
+    }
 
     environment* env = malloc(sizeof(environment));
     env->capacity = MAX_ENV_SIZE;
@@ -18,7 +20,7 @@ int start(FILE* in, FILE* out) {
     env->bindings = malloc(sizeof(binding*) * MAX_ENV_SIZE);
     env->outer = NULL;
 
-    while (fgets(input, MAX_STR_LEN, stdin)) {
+    while (fgets(input, MAX_STR_LEN, in)) {
         lexer* l = new (input);
         parser* p = p_new(l);
         stmt_list* result = parse_program(p);
@@ -35,7 +37,9 @@ int start(FILE* in, FILE* out) {
 
         release_token(p->curr_token);
         release_token(p->peek_token);
-        printf("> ");
+        if (in == stdin) {
+            printf("> ");
+        }
     }
     return 0;
 }
