@@ -56,7 +56,7 @@ true
                   }
 
 > greaterthan(num);
-"x was greater than 1 thousand but less than 10000"
+"x was greater than 1 thousand."
 ```
 
 ### Function as Arguments
@@ -71,10 +71,10 @@ note: functions implicitly return the value of the last statement (if no other r
 ### Function Scope
 ```
 > set i = 10;
-10;
+10
 > set double = fn(i){ return (i * 2); }
 > double(30);
-60;
+60
 > (i + 20)
 30
 ```
