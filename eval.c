@@ -239,7 +239,7 @@ object *eval_infix(token *operator, object * right, object *left) {
         obj->to_string = print_error;
         obj->type = ERROR_OBJ;
         obj->val.error_message = malloc(MAX_STR_LEN + 1);
-        strcpy(obj->val.error_message, "type mismatch for infix operator");
+        strcpy(obj->val.error_message, "type mismatch for infix operator.");
     }
     return obj;
 }
